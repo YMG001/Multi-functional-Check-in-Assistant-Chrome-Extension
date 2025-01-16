@@ -1,3 +1,5 @@
+![image](https://github.com/user-attachments/assets/c8f4cf1b-cdee-44eb-bab1-b388e5c19c7e)
+
 # 多功能签到助手
 
 这是一个强大的Chrome浏览器签到插件，支持多网站配置和一键签到功能，帮助用户轻松管理日常签到任务。
