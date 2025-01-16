@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>签到助手设置</title>
+    <style>
+        body {
+            width: 800px;
+            margin: 20px auto;
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .back-btn {
+            padding: 8px 16px;
+            background-color: #607d8b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background-color: #455a64;
+        }
+        .back-icon {
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+            margin-right: 5px;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffffff"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>');
+            background-repeat: no-repeat;
+        }
+        .site-config {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .site-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .site-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-col {
+            flex: 1;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-weight: 500;
+        }
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            border-color: #1976d2;
+            outline: none;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .save-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .save-btn:hover {
+            background-color: #43A047;
+        }
+        .test-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+        .test-btn:hover {
+            background-color: #1E88E5;
+        }
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+        }
+        .delete-btn:hover {
+            background-color: #E53935;
+        }
+        .add-site-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background-color: #9c27b0;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .add-site-btn:hover {
+            background-color: #8E24AA;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+            font-size: 14px;
+        }
+        .test-success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .test-error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button id="backBtn" class="back-btn">
+            <span class="back-icon"></span>
+            返回
+        </button>
+        <h1>签到助手设置</h1>
+        <div style="width: 100px;"></div>
+    </div>
+    
+    <div id="sites-container">
+        <!-- 现有的网站配置会在这里动态生成 -->
+    </div>
+    
+    <button class="add-site-btn" id="addSiteBtn">
+        <span>+ 添加新网站</span>
+    </button>
+
+    <!-- 网站配置模板 -->
+    <template id="site-template">
+        <div class="site-config" data-site-id="">
+            <div class="site-header">
+                <input type="text" class="site-name" placeholder="网站名称">
+                <button class="delete-btn">删除</button>
+            </div>
+            <div class="form-group">
+                <label>网站URL</label>
+                <input type="text" class="site-url" placeholder="https://example.com">
+                <div class="help-text">请输入完整的网址，包括https://</div>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <label>查找方式</label>
+                    <select class="selector-type">
+                        <option value="xpath">XPath</option>
+                        <option value="css">CSS选择器</option>
+                        <option value="js">JavaScript选择器</option>
+                    </select>
+                </div>
+                <div class="form-col">
+                    <label>等待时间（秒）</label>
+                    <input type="number" class="wait-time" min="0" max="30" value="2">
+                    <div class="help-text">页面加载后等待元素出现的时间</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>签到按钮选择器</label>
+                <input type="text" class="sign-selector" placeholder="请输入选择器">
+                <div class="help-text">根据选择的查找方式输入对应的选择器</div>
+            </div>
+            <div class="form-group">
+                <label>已签到标识选择器（可选）</label>
+                <input type="text" class="signed-selector" placeholder="用于检测是否已经签到">
+                <div class="help-text">如果存在此元素则表示已签到</div>
+            </div>
+            <div class="button-group">
+                <button class="test-btn">测试配置</button>
+                <button class="save-btn">保存配置</button>
+            </div>
+            <div class="test-result"></div>
+        </div>
+    </template>
+
+    <script src="options.js"></script>
+</body>
+</html> 
