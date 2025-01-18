@@ -204,12 +204,29 @@
                         <option value="xpath">XPath</option>
                         <option value="css">CSS选择器</option>
                         <option value="js">JavaScript选择器</option>
+                        <option value="regex">正则表达式</option>
                     </select>
+                    <div class="help-text selector-help">
+                        根据选择的查找方式输入对应的选择器：
+                        <ul>
+                            <li>XPath：使用浏览器开发工具复制XPath</li>
+                            <li>CSS：使用标准的CSS选择器语法</li>
+                            <li>JavaScript：返回目标元素的JS代码</li>
+                            <li>正则表达式：匹配按钮文本的正则表达式</li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="form-col">
                     <label>等待时间（秒）</label>
                     <input type="number" class="wait-time" min="0" max="30" value="2">
                     <div class="help-text">页面加载后等待元素出现的时间</div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-col">
+                    <label>签到后等待时间（秒）</label>
+                    <input type="number" class="close-wait-time" min="0" max="60" value="0">
+                    <div class="help-text">签到完成后关闭页面前的等待时间，0表示立即关闭</div>
                 </div>
             </div>
             <div class="form-group">
@@ -219,7 +236,21 @@
             </div>
             <div class="form-group">
                 <label>已签到标识选择器（可选）</label>
-                <input type="text" class="signed-selector" placeholder="用于检测是否已经签到">
+                <div class="form-row">
+                    <div class="form-col">
+                        <label>查找方式</label>
+                        <select class="signed-selector-type">
+                            <option value="xpath">XPath</option>
+                            <option value="css">CSS选择器</option>
+                            <option value="js">JavaScript选择器</option>
+                            <option value="regex">正则表达式</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label>选择器</label>
+                        <input type="text" class="signed-selector" placeholder="用于检测是否已经签到">
+                    </div>
+                </div>
                 <div class="help-text">如果存在此元素则表示已签到</div>
             </div>
             <div class="button-group">

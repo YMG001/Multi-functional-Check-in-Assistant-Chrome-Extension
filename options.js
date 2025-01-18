@@ -1,24 +1,42 @@
-// 生成唯一ID
+/**
+ * options.js
+ * 这是扩展的设置页面脚本，负责管理网站配置
+ * 包括添加、编辑、删除、测试网站配置等功能
+ */
+
+/**
+ * 生成唯一的网站ID
+ * 使用时间戳和随机字符串组合
+ * @returns {string} 生成的唯一ID
+ */
 function generateUniqueId() {
     return 'site_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
 
-// 创建新的网站配置
+/**
+ * 创建新的网站配置界面元素
+ * @param {HTMLTemplateElement} template - 网站配置模板
+ * @param {string} siteId - 网站ID，为空则自动生成
+ * @param {Object} config - 网站配置数据
+ * @returns {Element} 创建的网站配置元素
+ */
 function createSiteConfig(template, siteId = '', config = null) {
     const siteElement = template.content.cloneNode(true).querySelector('.site-config');
     siteElement.dataset.siteId = siteId || generateUniqueId();
     
-    // 填充配置数据
+    // 如果有配置数据，填充到表单中
     if (config) {
         siteElement.querySelector('.site-name').value = config.name || '';
         siteElement.querySelector('.site-url').value = config.url || '';
         siteElement.querySelector('.selector-type').value = config.selectorType || 'xpath';
         siteElement.querySelector('.wait-time').value = config.waitTime || 2;
+        siteElement.querySelector('.close-wait-time').value = config.closeWaitTime || 0;
         siteElement.querySelector('.sign-selector').value = config.signSelector || '';
         siteElement.querySelector('.signed-selector').value = config.signedSelector || '';
+        siteElement.querySelector('.signed-selector-type').value = config.signedSelectorType || 'css';
     }
     
-    // 绑定按钮事件
+    // 绑定按钮事件处理
     siteElement.querySelector('.test-btn').addEventListener('click', () => testSiteConfig(siteElement));
     siteElement.querySelector('.save-btn').addEventListener('click', () => saveSiteConfig(siteElement));
     siteElement.querySelector('.delete-btn').addEventListener('click', () => deleteSiteConfig(siteElement));
@@ -26,7 +44,9 @@ function createSiteConfig(template, siteId = '', config = null) {
     return siteElement;
 }
 
-// 加载配置
+/**
+ * 从存储中加载所有网站配置并显示
+ */
 function loadConfigs() {
     const sitesContainer = document.getElementById('sites-container');
     const template = document.getElementById('site-template');
@@ -34,10 +54,10 @@ function loadConfigs() {
     chrome.storage.local.get(['siteConfigs'], function(result) {
         const configs = result.siteConfigs || {};
         
-        // 清空容器
+        // 清空现有配置
         sitesContainer.innerHTML = '';
         
-        // 添加所有配置
+        // 添加所有已保存的配置
         Object.entries(configs).forEach(([siteId, config]) => {
             const siteElement = createSiteConfig(template, siteId, config);
             sitesContainer.appendChild(siteElement);
@@ -45,16 +65,22 @@ function loadConfigs() {
     });
 }
 
-// 保存网站配置
+/**
+ * 保存单个网站的配置
+ * @param {Element} siteElement - 要保存的网站配置元素
+ */
 async function saveSiteConfig(siteElement) {
     const siteId = siteElement.dataset.siteId;
+    // 收集表单数据
     const config = {
         name: siteElement.querySelector('.site-name').value,
         url: siteElement.querySelector('.site-url').value,
         selectorType: siteElement.querySelector('.selector-type').value,
         waitTime: parseInt(siteElement.querySelector('.wait-time').value) || 2,
+        closeWaitTime: parseInt(siteElement.querySelector('.close-wait-time').value) || 0,
         signSelector: siteElement.querySelector('.sign-selector').value,
-        signedSelector: siteElement.querySelector('.signed-selector').value
+        signedSelector: siteElement.querySelector('.signed-selector').value,
+        signedSelectorType: siteElement.querySelector('.signed-selector-type').value
     };
 
     // 验证必填字段
@@ -67,16 +93,18 @@ async function saveSiteConfig(siteElement) {
         // 验证URL格式
         new URL(config.url);
         
+        // 获取现有配置并更新
         const result = await chrome.storage.local.get(['siteConfigs']);
         const configs = result.siteConfigs || {};
         configs[siteId] = config;
         
+        // 保存到存储
         await chrome.storage.local.set({ siteConfigs: configs });
         
         // 显示保存成功提示
         showTestResult(siteElement, '配置已保存', true);
         
-        // 广播配置更新
+        // 通知其他页面配置已更新
         chrome.runtime.sendMessage({
             type: 'CONFIG_UPDATED',
             configs: configs
@@ -91,39 +119,49 @@ async function saveSiteConfig(siteElement) {
     }
 }
 
-// 删除网站配置
+/**
+ * 删除网站配置
+ * @param {Element} siteElement - 要删除的网站配置元素
+ */
 async function deleteSiteConfig(siteElement) {
     const siteId = siteElement.dataset.siteId;
     
     try {
+        // 获取现有配置并删除指定网站
         const result = await chrome.storage.local.get(['siteConfigs']);
         const configs = result.siteConfigs || {};
         delete configs[siteId];
         
+        // 保存更新后的配置
         await chrome.storage.local.set({ siteConfigs: configs });
         
-        // 广播配置更新
+        // 通知其他页面配置已更新
         chrome.runtime.sendMessage({
             type: 'CONFIG_UPDATED',
             configs: configs
         });
         
-        // 移除元素
+        // 从界面移除配置元素
         siteElement.remove();
     } catch (error) {
         console.error('删除配置失败:', error);
     }
 }
 
-// 测试网站配置
+/**
+ * 测试网站配置
+ * @param {Element} siteElement - 要测试的网站配置元素
+ */
 async function testSiteConfig(siteElement) {
+    // 收集配置数据
     const config = {
         name: siteElement.querySelector('.site-name').value,
         url: siteElement.querySelector('.site-url').value,
         selectorType: siteElement.querySelector('.selector-type').value,
         waitTime: parseInt(siteElement.querySelector('.wait-time').value) || 2,
         signSelector: siteElement.querySelector('.sign-selector').value,
-        signedSelector: siteElement.querySelector('.signed-selector').value
+        signedSelector: siteElement.querySelector('.signed-selector').value,
+        signedSelectorType: siteElement.querySelector('.signed-selector-type').value
     };
 
     // 验证必填字段
@@ -144,7 +182,7 @@ async function testSiteConfig(siteElement) {
     try {
         showTestResult(siteElement, '正在打开测试页面...', true);
         
-        // 打开新标签页
+        // 创建新标签页访问目标网站
         tab = await new Promise((resolve) => {
             chrome.tabs.create({ 
                 url: config.url, 
@@ -185,7 +223,7 @@ async function testSiteConfig(siteElement) {
         
         showTestResult(siteElement, '正在测试配置...', true);
         
-        // 执行测试，增加详细的元素信息返回
+        // 执行测试，请求返回详细的元素信息
         const response = await new Promise((resolve, reject) => {
             chrome.tabs.sendMessage(tab.id, {
                 type: 'TEST_CONFIG',
@@ -200,6 +238,7 @@ async function testSiteConfig(siteElement) {
             });
         });
         
+        // 处理测试结果
         if (response?.success) {
             let resultMessage = '测试成功：找到目标元素';
             if (response.elementDetails) {
@@ -215,6 +254,7 @@ async function testSiteConfig(siteElement) {
         console.error('测试过程出错:', error);
         let errorMessage = '测试失败：';
         
+        // 根据不同错误类型显示友好的错误信息
         if (error.message.includes('Could not establish connection')) {
             errorMessage += '请确保页面已完全加载，可以刷新页面后重试';
         } else if (error.message.includes('页面加载超时')) {
@@ -238,24 +278,31 @@ async function testSiteConfig(siteElement) {
     }
 }
 
-// 显示测试结果（支持多行消息）
+/**
+ * 显示测试结果信息
+ * @param {Element} siteElement - 网站配置元素
+ * @param {string} message - 要显示的消息
+ * @param {boolean} success - 是否成功
+ */
 function showTestResult(siteElement, message, success) {
     const resultDiv = siteElement.querySelector('.test-result');
-    // 将\n转换为<br>标签
+    // 将\n转换为<br>标签以支持多行消息
     resultDiv.innerHTML = message.replace(/\n/g, '<br>');
     resultDiv.style.display = 'block';
     resultDiv.className = `test-result ${success ? 'test-success' : 'test-error'}`;
     
     // 如果不是最终结果，不要自动隐藏
     if (message.includes('成功') || message.includes('失败')) {
-        // 对于详细信息，延长显示时间
+        // 对于详细信息，延长显示时间到5秒
         setTimeout(() => {
             resultDiv.style.display = 'none';
-        }, 5000);  // 增加到5秒
+        }, 5000);
     }
 }
 
-// 返回到popup页面
+/**
+ * 返回到popup页面
+ */
 function backToPopup() {
     window.close();
 }
