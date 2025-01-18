@@ -1,6 +1,7 @@
 # 多功能签到助手
 
-![image](https://github.com/user-attachments/assets/9e976106-b9a6-4380-b39a-640221f5a453)
+![image](https://github.com/user-attachments/assets/18080599-fd32-400e-91b7-099643614856)
+
 
 
 这是一个支持多网站一键签到的Chrome浏览器扩展，具有可视化配置和智能等待功能。
